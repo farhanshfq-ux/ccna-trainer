@@ -68,6 +68,56 @@
     paint();
   }
 
+  /* ================= 1b. The mask, one box at a time ================= */
+  var BOXV = [128, 64, 32, 16, 8, 4, 2, 1];
+  A.maskBuilder = function (start) {
+    var p = start || 24, out = h("div", { class: "stack" }), big = h("span", { class: "pfx mono" }), minus, plus;
+    function set(v) { p = Math.max(24, Math.min(32, v)); paint(); }
+    minus = h("button", { class: "btn quiet", type: "button", id: "mb-minus", text: "−", "aria-label": "Empty the last box", onclick: function () { set(p - 1); } });
+    plus = h("button", { class: "btn", type: "button", id: "mb-plus", text: "+", "aria-label": "Fill the next box", onclick: function () { set(p + 1); } });
+    function paint() {
+      var n = p - 24, filled = BOXV.slice(0, n), sum = filled.reduce(function (a, b) { return a + b; }, 0), size = 256 - sum, pieces = 256 / size, kids = [];
+      big.textContent = "/" + p; minus.disabled = p <= 24; plus.disabled = p >= 32;
+      kids.push(h("div", { class: "mbox-row" }, BOXV.map(function (v, i) {
+        return h("button", { type: "button", class: "mbox" + (i < n ? " on" : ""), "aria-pressed": i < n ? "true" : "false", "aria-label": "Box worth " + v,
+          onclick: function () { set(i === n - 1 ? 24 + i : 25 + i); } }, [h("span", { text: String(v) })]); })));
+      kids.push(h("div", { class: "legend" }, [h("span", { class: "key net", text: "filled = network" }), h("span", { class: "key", text: "empty = host" })]));
+      kids.push(h("div", { class: "panel stack tight" }, [h("span", { class: "eyebrow", text: "Add up the filled boxes" }),
+        h("p", { class: "mono", text: n ? filled.join(" + ") + " = " + sum : "No boxes filled = 0" }),
+        h("span", { class: "eyebrow", text: "So the mask is" }),
+        h("p", { class: "maskline mono" }, ["255.255.255.", h("strong", { text: String(sum) })])]));
+      var what = [h("span", { class: "eyebrow", text: "What it does to the network" })];
+      if (p <= 30) {
+        what.push(h("div", { class: "segbar" }, A.range(pieces).map(function (k) { return h("span", { class: "seg " + (k % 2 ? "s-b" : "s-a"), text: pieces <= 8 ? String(k * size) : "" }); })));
+        what.push(h("p", { text: n ? "Cut into " + pieces + " pieces of " + size + " addresses (" + (size - 2) + " usable in each)." : "One network of 256 addresses (254 usable)." }));
+        if (n) what.push(h("p", { class: "small muted", text: "Piece size = 256 − " + sum + " = " + size + ". Each box you fill cuts every piece in half." }));
+      } else what.push(h("p", { text: p === 31 ? "Pieces of just 2 addresses. A special case used on links between two routers." : "A single address on its own. Used for one host, such as a router's loopback." }));
+      kids.push(h("div", { class: "stack tight" }, what));
+      A.setKids(out, kids);
+    }
+    paint();
+    return h("div", { class: "stack" }, [h("div", { class: "row pfx-row" }, [minus, big, plus]), out]);
+  };
+  function maskGuide(back) {
+    var qbox = h("div", { class: "stack" });
+    function ask() {
+      var t = 25 + A.rnd(6), sum = BOXV.slice(0, t - 24).reduce(function (a, b) { return a + b; }, 0), tries = 0, msg = h("div"),
+          inp = h("input", { class: "answer", id: "mb-ans", type: "text", inputmode: "decimal", autocomplete: "off", "aria-label": "Your answer", placeholder: "255.255.255.?" });
+      A.setKids(qbox, [h("p", { class: "qtext", text: "What is /" + t + " as a full mask?" }),
+        h("form", { class: "stack", onsubmit: function (e) { e.preventDefault(); var v = inp.value.trim(); if (!v) return;
+          var ok = v === "255.255.255." + sum || v === String(sum);
+          if (ok) { A.setKids(msg, [h("div", { class: "notice ok", text: "Yes: 255.255.255." + sum + ". " + (t - 24) + (t === 25 ? " box" : " boxes") + " filled: " + BOXV.slice(0, t - 24).join(" + ") + "." })]); return; }
+          tries++; A.setKids(msg, [h("div", { class: "notice", text: tries < 2 ? "Not quite. /" + t + " fills " + (t - 24) + (t === 25 ? " box" : " boxes") + ". Set the boxes above to /" + t + " and add them up." : "It is 255.255.255." + sum + ": " + BOXV.slice(0, t - 24).join(" + ") + " = " + sum + "." })]); } },
+          [inp, msg, h("div", { class: "row" }, [h("button", { class: "btn ghost", type: "submit", text: "Check" }), h("button", { class: "btn quiet", type: "button", text: "Another one", onclick: ask })])])]);
+    }
+    frame({ title: "Visual guide", tab: "learn", back: back, backLabel: "Back" }, [
+      h("div", { class: "stack tight" }, [h("h1", { text: "The mask, one box at a time" }),
+        h("p", { class: "muted", text: "The last number of the mask is 8 boxes, worth 128, 64, 32, 16, 8, 4, 2 and 1. Every number after /24 fills one more box. Tap + and watch what changes." })]),
+      A.maskBuilder(24),
+      h("h2", { text: "Test yourself" }), h("div", { class: "panel" }, [qbox])]);
+    ask();
+  }
+
   /* ================= 2. IPv6 and EUI-64 ================= */
   function v6kind(g) {
     if (g.every(function (x) { return x === 0; })) return "Unspecified (::)";
@@ -336,6 +386,7 @@
 
   A.VISUALS = [
     { id: "subnet", title: "Subnetting, bit by bit", sub: "Move the prefix and see the network and host bits", obj: ["1.3"], open: subnetExplorer },
+    { id: "mask", title: "The mask, one box at a time", sub: "Tap + to fill each box and watch the mask and the pieces change", obj: ["1.3"], open: maskGuide },
     { id: "packet", title: "Follow a packet across a router", sub: "Which addresses change at each hop", obj: ["2.4"], open: function (b) { pathWalk(WALKS.packet, b); } },
     { id: "tcp", title: "The TCP three-way handshake", sub: "And what a failed one looks like in a capture", obj: ["2.4"], open: function (b) { seqWalk(SEQS.tcp, b); } },
     { id: "ipv6", title: "IPv6 addresses and EUI-64", sub: "Shorten any address, build one from a MAC", obj: ["1.4"], open: ipv6Explorer },

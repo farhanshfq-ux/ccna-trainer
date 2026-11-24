@@ -155,6 +155,7 @@
       p("Look at what happened. Each cut adds 1 to the slash number and halves the size. The sizes are always the same row of numbers:"),
       table(["Short way", "Block size", "Usable"], [["/25", "128", "126"], ["/26", "64", "62"], ["/27", "32", "30"], ["/28", "16", "14"], ["/29", "8", "6"], ["/30", "4", "2"]]),
       key("128, 64, 32, 16, 8, 4. Learn that row and you have learned most of subnetting."),
+      h("button", { class: "btn ghost", type: "button", text: "See the mask built one box at a time", onclick: function () { A.VISUALS.filter(function (v) { return v.id === "mask"; })[0].open(function () { A.runCourse("subnet", 4); }); } }),
       ask(g, "You need a subnet for 50 devices. Which is the smallest that fits?", ["/26 (62 usable)", ["/27 (30 usable)", "30 is fewer than 50. Too small."], ["/25 (126 usable)", "It fits, but a smaller one does too. Wasting addresses loses marks."], ["/24 (254 usable)", "It fits, but it is far bigger than needed."]], "62 is the first size that holds 50. The next size down, 30, does not."),
       ask(g, "A /30 has how many usable addresses, and what is it for?", ["2. A link between two routers", ["4. A small office", "The block is 4, but two of those are the network and broadcast addresses."], ["30. A small office", "The 30 is the slash number, not a count of devices."]], "Block size 4, minus the network and the broadcast, leaves 2: one for each end of a link.")]; } },
     { t: "Where each subnet starts", make: function (g) { return [
