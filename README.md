@@ -5,7 +5,7 @@ installs to the home screen and works with no signal.
 
 - Subnetting drill (IPv4, VLSM, IPv6), timed
 - 211 flashcards with spaced repetition
-- 320 exam-style questions with explanations for every option
+- 330 exam-style questions with explanations for every option
 - 26 troubleshooting scenarios with realistic show output
 - 100-question, 120-minute mock exam
 - A study note for each of the 29 blueprint objectives
