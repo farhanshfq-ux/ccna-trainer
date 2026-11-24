@@ -99,8 +99,9 @@
     var steps = [], wk = currentWeek(), day = new Date().getDay(), weekend = day === 0 || day === 6, all = A.D.questions;
     var p = A.LS.get("placement"), due = A.dueCards().length, fresh = A.D.flashcards.filter(function (k) { return !A.ST.cards.cards[k.id]; }).length;
     if (!A.placementDone()) steps.push({ name: "Placement test", sub: p && p.answers && p.answers.length ? "Carry on from question " + (p.answers.length + 1) : "40 questions plus a subnetting speed test. Do this first", go: A.placementMenu });
-    var lesson = A.nextLesson();
-    if (lesson) steps.push({ name: "Learn: " + lesson.title.replace(/^[\d.]+\s*/, ""), sub: "Step-by-step lesson" + (A.visualsFor(lesson.objective).length ? " with a visual guide" : "") + ", about 10 minutes", done: A.doneToday("lesson"), go: function () { A.runLesson(lesson, 0, A.home); } });
+    var lesson = A.nextLesson(), crs = A.COURSES[0], cd = A.courseDone(crs.id);
+    if (cd < crs.chapters.length) steps.push({ name: crs.title + ": chapter " + (cd + 1) + " of " + crs.chapters.length, sub: crs.chapters[cd].t + ". About 5 minutes", done: A.doneToday("course"), go: function () { A.runCourse(crs.id, null, A.home); } });
+    else if (lesson) steps.push({ name: "Learn: " + lesson.title.replace(/^[\d.]+\s*/, ""), sub: "Step-by-step lesson" + (A.visualsFor(lesson.objective).length ? " with a visual guide" : "") + ", about 10 minutes", done: A.doneToday("lesson"), go: function () { A.runLesson(lesson, 0, A.home); } });
     steps.push({ name: "Flashcards", sub: due ? due + " due today" : fresh ? "20 new cards" : "Nothing due today", done: A.doneToday("flashcards"), go: function () { A.cardsToday(A.home); } });
     var mix = wk && wk.n >= 6 ? ["Everything mixed", A.genAll, 15] : ["IPv4 mixed", A.genV4, 10];
     steps.push({ name: "Subnetting drill", sub: mix[2] + " timed questions", done: A.doneToday("subnet"), go: function () { A.runDrill(mix[0], mix[1], mix[2], { backTo: A.home }); } });

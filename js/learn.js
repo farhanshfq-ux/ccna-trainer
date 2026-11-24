@@ -36,7 +36,8 @@
   A.runLesson = function (d, startAt, backTo) {
     var note = parseNote(d), exit = backTo || A.learnMenu, vis = A.visualsFor(d.objective), cards = [], i = startAt || 0, started = Date.now();
     function doc(md) { return h("div", { class: "doc" }, A.md(md || "")); }
-    cards.push({ name: "The idea", make: function () { return h("div", { class: "stack" }, [h("div", { class: "lesson-lead" }, A.md(note.secs.Summary || "")), note.quote ? h("p", { class: "small muted", text: note.quote.replace(/\*\*/g, "") }) : null]); } });
+    cards.push({ name: "The idea", make: function () { return h("div", { class: "stack" }, [h("div", { class: "lesson-lead" }, A.md(note.secs.Summary || "")), note.quote ? h("p", { class: "small muted", text: note.quote.replace(/\*\*/g, "") }) : null,
+      d.objective === "1.3" && A.courseDone("subnet") < A.COURSES[0].chapters.length ? h("div", { class: "notice info stack" }, [h("span", { text: "This lesson is a summary for revision. If subnetting is not clear yet, do the from-scratch course first." }), h("button", { class: "btn", type: "button", text: "Open Subnetting from zero", onclick: function () { A.runCourse("subnet", null, function () { A.runLesson(d, 0, backTo); }); } })]) : null]); } });
     if (vis.length) cards.push({ name: "See it", make: function () { return h("div", { class: "stack" }, [h("p", { text: "Before the detail, see it working. Open " + (vis.length > 1 ? "each guide" : "the guide") + ", step through it, then come back here." }),
       A.modeList(vis.map(function (v) { return { name: v.title, sub: v.sub, go: function () { v.open(function () { A.runLesson(d, i, backTo); }); } }; }))]); } });
     [["Know these", "Key facts and defaults"], ["The commands", "IOS commands"], ["Check your work", "Verification"], ["Exam traps", "Exam traps"], ["On your sites", "On real sites"]].forEach(function (c) {
@@ -83,8 +84,12 @@
   A.learnMenu = function () {
     var lessons = A.lessons(), nxt = A.nextLesson(), done = lessons.filter(function (d) { return A.lessonDone(d.objective); }).length, kids = [];
     kids.push(h("div", { class: "stack tight" }, [h("h1", { text: "Learn" }), h("p", { class: "muted", text: "Short lessons that teach before they test: the idea, a picture, the commands, then you explain it back. " + done + " of " + lessons.length + " done." })]));
-    if (nxt) kids.push(h("button", { class: "hero", type: "button", onclick: function () { A.runLesson(nxt); } }, [h("span", { class: "eyebrow", text: "Up next · objective " + nxt.objective }), h("span", { class: "hero-title", text: nxt.title.replace(/^[\d.]+\s*/, "") }),
+    var crs = A.COURSES[0], cd = A.courseDone(crs.id), cn = crs.chapters.length;
+    if (cd < cn) kids.push(h("button", { class: "hero", type: "button", id: "course-hero", onclick: function () { A.runCourse(crs.id); } }, [h("span", { class: "eyebrow", text: cd ? "Carry on · chapter " + (cd + 1) + " of " + cn : "Start here · no knowledge needed" }), h("span", { class: "hero-title", text: crs.title }),
+      h("span", { class: "hero-sub", text: crs.sub + ". " + cn + " short chapters, about 5 minutes each." }), h("span", { class: "hero-go", text: (cd ? "Carry on" : "Start") + " \u203a" })]));
+    if (nxt) kids.push(h("button", { class: cd < cn ? "hero alt" : "hero", type: "button", onclick: function () { A.runLesson(nxt); } }, [h("span", { class: "eyebrow", text: "Up next · objective " + nxt.objective }), h("span", { class: "hero-title", text: nxt.title.replace(/^[\d.]+\s*/, "") }),
       h("span", { class: "hero-sub", text: "About 10 minutes. " + (A.visualsFor(nxt.objective).length ? "Includes a visual guide." : "Ends with questions you answer out loud.") }), h("span", { class: "hero-go", text: "Start lesson ›" })]));
+    if (cd >= cn) kids.push(A.modeList([{ name: crs.title, sub: "The from-scratch course. Tap to go through it again", badge: "done", done: true, go: function () { A.runCourse(crs.id, 0); } }]));
     kids.push(h("h2", { text: "Visual guides" }));
     kids.push(h("div", { class: "tiles" }, A.VISUALS.map(function (v) { return h("button", { class: "tile", type: "button", onclick: function () { v.open(A.learnMenu); } }, [h("span", { class: "tile-obj mono", text: v.obj.join(" · ") }), h("span", { class: "tile-title", text: v.title }), h("span", { class: "tile-sub", text: v.sub })]); })));
     Object.keys(A.DOMAINS).forEach(function (dom) {
