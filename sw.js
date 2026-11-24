@@ -1,7 +1,7 @@
 /* sw.js: makes the app work with no signal.
    On first visit it saves every file the app needs. After that, files are served from the phone.
    VERSION and ASSETS are rewritten by tools/build_app.py whenever the content changes. */
-var VERSION = "ccna-trainer-b11e6f980f4f";
+var VERSION = "ccna-trainer-c0cfb11efa60";
 var ASSETS = ["./", "index.html", "manifest.webmanifest", "css/app.css", "data/coach.json", "data/diagnostic.json", "data/flashcards.json", "data/notes.json", "data/plan.json", "data/questions.json", "data/scenarios.json", "icons/icon-180.png", "icons/icon-192.png", "icons/icon-512.png", "icons/icon-maskable-512.png", "js/cards.js", "js/core.js", "js/course.js", "js/engine.js", "js/learn.js", "js/main.js", "js/notes.js", "js/progress.js", "js/subnet.js", "js/trouble.js", "js/visuals.js"];
 
 self.addEventListener("install", function (event) {

@@ -123,12 +123,50 @@
     return { kind: "v6count", prompt: "How many /" + p[1] + " subnets can you make from one /" + p[0] + " prefix?", fields: one("num"), answer: t.toLocaleString("en-GB"), check: function (v) { return parseNum(v[0]) === t; },
       work: "Subnet bits = " + p[1] + " - " + p[0] + " = " + (p[1] - p[0]) + ". 2^" + (p[1] - p[0]) + " = " + t.toLocaleString("en-GB") + ".", hint: "Subnets = 2^(new prefix - old prefix)." }; };
 
+  /* ---- the practice ladder: one skill at a time ---- */
+  var LAST = [25, 26, 27, 28, 29, 30], THIRD = [17, 18, 19, 20, 21, 22, 23];
+  var SIGNS = "0, 32, 64, 96, 128, 160, 192, 224";
+  function jumpWork(v, block) {
+    var start = v - (v % block), j = block < 32 ? v - (v % 32) : 0, steps = [], n,
+        tail = v === start ? v + " is exactly where a block starts, so it is in the block " + start + " to " + (start + block - 1) + "."
+                           : v + " is after " + start + " and before " + (start + block) + ", so it is in the block " + start + " to " + (start + block - 1) + ".";
+    if (block === 2) return "Blocks of 2 always start on an even number. " + (v % 2 ? v + " is odd, so its block starts one below, at " + start + "." : v + " is even, so its block starts at " + v + ".") + " The block is " + start + " to " + (start + 1) + ".";
+    for (n = j; n <= start + block && n <= 256; n += block) steps.push(n);
+    return (block < 32 ? "Signpost: the multiple of 32 at or below " + v + " is " + j + " (32s go " + SIGNS + "). Count on from there in " + block + "s: " : "Count up in " + block + "s: ") + steps.join(", ") + ". " + tail;
+  }
+  function jumpHint(v, block) {
+    if (block === 2) return "Blocks of 2 start on even numbers. Is " + v + " odd or even?";
+    return block < 32 ? "Use the 32s as signposts: " + SIGNS + ". Find the one at or below " + v + ", then count on in " + block + "s." : "Count up in " + block + "s from 0 and stop before you pass " + v + ".";
+  }
+  function halving(p, from) { var c = [], size = 256, k; for (k = from; k <= p; k++) { c.push("/" + k + " = " + size); size /= 2; } return c.join(", "); }
+  GEN.blocksize = function () {
+    var third = Math.random() < 0.25, p = pick1(third ? THIRD : LAST), b = Math.pow(2, (third ? 24 : 32) - p);
+    return { kind: "blocksize", prompt: "What is the block size for /" + p + "?" + (third ? " (The line is in the THIRD number.)" : ""), fields: one("num"), answer: String(b), check: function (v) { return parseNum(v[0]) === b; },
+      work: "Halve once for every step: " + halving(p, third ? 16 : 24) + "." + (third ? " /" + p + " behaves like /" + (p + 8) + ", one number to the left." : "") + " Or fill boxes from 128 down: the last box you fill is the block size.",
+      hint: third ? "/" + p + " behaves like /" + (p + 8) + ". What is the block size for /" + (p + 8) + "?" : "Start at /24 = 256 and halve once for every step past 24." };
+  };
+  GEN.blockstart = function () {
+    var p = pick1(LAST), b = Math.pow(2, 32 - p), v = rnd(256), start = v - (v % b);
+    return { kind: "blockstart", prompt: "/" + p + " cuts the last number into blocks of " + b + ". Which block is " + v + " in? Type the number the block STARTS at.", fields: one("num"), answer: String(start),
+      check: function (v2) { return parseNum(v2[0]) === start; }, work: jumpWork(v, b),
+      hint: jumpHint(v, b) };
+  };
+  function ladderQ(which, prefixes) {
+    var s = randHost(pick1(prefixes)), i = Math.floor(s.prefix / 8), block = 256 - Number(ip(s.mask).split(".")[i]), v = Number(ip(s.host).split(".")[i]),
+        q = which === "network" ? ipQ("network", "What is the NETWORK address of " + shown(s) + "?", s.net, s) : ipQ("broadcast", "What is the BROADCAST address of " + shown(s) + "?", s.bcast, s);
+    q.work = jumpWork(v, block) + " " + q.work; q.hint = "Block size " + block + (i === 2 ? " in the THIRD number" : "") + ". " + jumpHint(v, block);
+    return q;
+  }
+  GEN.netLast = function () { return ladderQ("network", LAST); };
+  GEN.bcLast = function () { return ladderQ("broadcast", LAST); };
+  GEN.third = function () { return ladderQ(Math.random() < 0.5 ? "network" : "broadcast", THIRD); };
+
   var V4MIX = ["network", "network", "network", "broadcast", "broadcast", "broadcast", "first", "first", "last", "last", "hosts", "hosts", "which", "which", "which", "mask", "wildcard", "need", "need", "same"];
   var V6MIX = ["v6short", "v6short", "v6short", "v6full", "v6full", "v6prefix", "v6prefix", "v6prefix", "v6type", "v6type", "v6eui", "v6eui", "v6count"];
   A.genV4 = function () { return GEN[pick1(V4MIX)](); };
   A.genV6 = function () { return GEN[pick1(V6MIX)](); };
   A.genAll = function () { var r = Math.random(); return r < 0.65 ? A.genV4() : r < 0.8 ? GEN.vlsm() : A.genV6(); };
-  A.KIND = { network: "Network address", broadcast: "Broadcast address", first: "First host", last: "Last host", hosts: "Number of hosts", which: "Which subnet", mask: "Mask conversion", wildcard: "Wildcard mask",
+  A.KIND = { blocksize: "Block size", blockstart: "Find the block", network: "Network address", broadcast: "Broadcast address", first: "First host", last: "Last host", hosts: "Number of hosts", which: "Which subnet", mask: "Mask conversion", wildcard: "Wildcard mask",
     need: "Prefix for N hosts", same: "Same subnet?", vlsm: "VLSM design", v6short: "IPv6 shorten", v6full: "IPv6 expand", v6prefix: "IPv6 prefix", v6type: "IPv6 address type", v6eui: "IPv6 EUI-64", v6count: "IPv6 subnet count" };
   A._subnet = { GEN: GEN, parseIp: parseIp, ip: ip, maskOf: maskOf, v6parse: v6parse, v6short: v6short, v6full: v6full };
 
@@ -148,6 +186,16 @@
         h("div", { class: "stat" }, [h("span", { class: "num " + (rec.avg <= GOAL ? "t-ok" : ""), text: rec.avg.toFixed(1) + "s" }), h("span", { class: "lbl", text: "Avg speed" })]),
         h("div", { class: "stat" }, [h("span", { class: "num " + (rec.accuracy >= GOAL_ACC ? "t-ok" : ""), text: Math.round(rec.accuracy) + "%" }), h("span", { class: "lbl", text: "Accuracy" })]),
         h("div", { class: "stat" }, [h("span", { class: "num", text: String(rec.n) }), h("span", { class: "lbl", text: "Last answers" })])]) : null,
+      h("h2", { text: "Start here: one skill at a time" }),
+      h("p", { class: "small muted", text: "Do these in order. The clock runs, but ignore it for now: get them right first, speed comes later. Get one wrong and you get a hint and a second try." }),
+      A.modeList([
+        { name: "Step 1. Slash to block size", sub: "/27 makes blocks of how many?", go: function () { A.runDrill("Step 1: block size", GEN.blocksize, 10, { retry: true }); } },
+        { name: "Step 2. Find the block", sub: "Blocks of 8: which block is 77 in? Learn the 32s signpost trick", go: function () { A.runDrill("Step 2: find the block", GEN.blockstart, 10, { retry: true }); } },
+        { name: "Step 3. Network address", sub: "/25 to /30 only", go: function () { A.runDrill("Step 3: network /25-/30", GEN.netLast, 10, { retry: true }); } },
+        { name: "Step 4. Broadcast address", sub: "/25 to /30 only", go: function () { A.runDrill("Step 4: broadcast /25-/30", GEN.bcLast, 10, { retry: true }); } },
+        { name: "Step 5. The line in the third number", sub: "/17 to /23, network and broadcast", go: function () { A.runDrill("Step 5: third number", GEN.third, 10, { retry: true }); } }]),
+      h("h2", { text: "Exam-style drills" }),
+      h("p", { class: "small muted", text: "These mix everything at exam speed, including wildcard masks and VLSM, which come later in the plan. Expect them to feel hard until the steps above are easy." }),
       A.modeList([
         { name: "IPv4 mixed drill", sub: "10 questions", go: function () { A.runDrill("IPv4 mixed", A.genV4, 10); } },
         { name: "IPv4 speed test", sub: "20 questions", go: function () { A.runDrill("IPv4 speed test", A.genV4, 20); } },
@@ -182,13 +230,19 @@
     }
     function step() {
       if (items.length >= count) return done();
-      var q = gen(), begin = Date.now(), hinted = false, clock = h("div", { class: "clock", text: "0s" }), out = h("div", { class: "stack" }), hintBox = h("div"), entry, inputs = [];
+      var q = gen(), begin = Date.now(), hinted = false, retried = false, clock = h("div", { class: "clock", text: "0s" }), out = h("div", { class: "stack" }), hintBox = h("div"), entry, inputs = [];
       var hintBtn = opts.noHints ? null : h("button", { class: "linkbtn", id: "hint-btn", type: "button", text: "Give me a hint (the answer will not count)", onclick: function () { hinted = true; A.setKids(hintBox, [h("div", { class: "notice info", text: q.hint })]); hintBtn.hidden = true; } });
       function finish(values) {
+        if (opts.retry && !retried && !q.choices && !q.check(values)) {    /* practice steps: a hint and a second try before the answer */
+          retried = true; hinted = true; if (hintBtn) hintBtn.hidden = true;
+          A.setKids(hintBox, [h("div", { class: "notice", text: "Not quite. Hint: " + q.hint + " Have another go." })]);
+          inputs.forEach(function (x) { x.value = ""; }); if (inputs[0]) inputs[0].focus(); return;
+        }
         A.stopTick();
         var secs = Math.round((Date.now() - begin) / 100) / 10, right = !!q.check(values), credited = right && !hinted;
         items.push({ kind: q.kind, ok: credited, s: secs }); entry.hidden = true; hintBox.hidden = true; if (hintBtn) hintBtn.hidden = true;
         var last = items.length >= count, msg = credited ? "Correct in " + secs.toFixed(0) + " seconds." + (secs <= GOAL ? " Inside the " + GOAL + "s target." : " Right, but over the " + GOAL + "s target.")
+          : right && retried ? "Right on the second try. It does not count towards your score, but that is how it sticks."
           : right ? "Correct in " + secs.toFixed(0) + " seconds, but you used a hint, so it does not count." : "Not quite (" + secs.toFixed(0) + " seconds). Answer: " + q.answer;
         var picture = h("div");
         A.setKids(out, [h("p", { class: "verdict " + (credited ? "ok" : right ? "" : "bad"), text: msg }), right ? null : h("p", { class: "small muted", text: q.work }),
