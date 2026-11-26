@@ -4,7 +4,8 @@ A free, offline study app for the Cisco CCNA 200-301 **v2.0** exam. It runs in t
 installs to the home screen and works with no signal.
 
 - Subnetting drill (IPv4, VLSM, IPv6), timed
-- 211 flashcards with spaced repetition
+- 244 visual flashcards with spaced repetition: a picture with the answer hidden, tap the answer, then the full card
+  and a memory hook. A picture board for each topic, a weak-spots session, and the classic flip cards as an option
 - 330 exam-style questions with explanations for every option
 - 26 troubleshooting scenarios with realistic show output
 - 100-question, 120-minute mock exam
