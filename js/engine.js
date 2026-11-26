@@ -106,7 +106,7 @@
         { name: "Longer mixed quiz", sub: "25 questions", go: function () { A.runQuiz("Mixed quiz (25)", A.pickByWeight(all, 25)); } },
         { name: "Past mistakes", sub: "Questions you got wrong last time", badge: String(wrong.length), go: function () { if (wrong.length) A.runQuiz("Past mistakes", A.pickQ(wrong, 10)); else A.toast("Nothing waiting. Good."); } }]),
       h("h2", { text: "One domain" }),
-      A.modeList(Object.keys(DOMAINS).map(function (d) { return { name: d + ". " + DOMAINS[d][0], sub: DOMAINS[d][1] + "% of the exam", go: function () { A.runQuiz("Domain " + d, A.pickQ(all.filter(function (q) { return String(q.domain) === d; }), 10)); } }; })),
+      A.modeList(Object.keys(DOMAINS).map(function (d) { return { name: d + ". " + DOMAINS[d][0], sub: DOMAINS[d][1] + "% of the exam", tone: d, go: function () { A.runQuiz("Domain " + d, A.pickQ(all.filter(function (q) { return String(q.domain) === d; }), 10)); } }; })),
       h("h2", { text: "One objective" }), sel,
       h("button", { class: "btn ghost", type: "button", text: "Start 10 questions on this objective", onclick: function () { if (sel.value) A.runQuiz("Objective " + sel.value, A.pickQ(all.filter(function (q) { return q.objective === sel.value; }), 10)); } })
     ]);
@@ -155,6 +155,7 @@
       }
       frame({ title: label, back: done, backLabel: "Finish" }, [
         A.plate("Question " + (i + 1) + " of " + qs.length, "Objective " + q.objective, qs.length, function (k) { return k < sheet.length ? (sheet[k].correct ? "done" : "bad") : k === i ? "now" : ""; }),
+        DOMAINS[q.domain] ? h("span", { class: "eyebrow pill" + A.tone(q.domain), text: "Domain " + q.domain + " · " + DOMAINS[q.domain][0] }) : null,
         ui.el, checkBtn, out]);
     }
     if (!qs.length) return exit();

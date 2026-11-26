@@ -21,7 +21,14 @@
   /* Offline support. The service worker keeps a full copy of the app on the phone. */
   if ("serviceWorker" in navigator && !A.hosted) {
     var hadController = !!navigator.serviceWorker.controller;
-    window.addEventListener("load", function () { navigator.serviceWorker.register("sw.js").catch(function () { /* offline support unavailable: the app still works online */ }); });
-    navigator.serviceWorker.addEventListener("controllerchange", function () { if (hadController) A.toast("App updated. Close and reopen it to get the new version."); hadController = true; });
+    /* A phone keeps a home-screen app alive for days, so also look for a new version every time the app comes back to the front. */
+    var check = function () { navigator.serviceWorker.getRegistration().then(function (reg) { if (reg) reg.update(); }).catch(function () { /* offline */ }); };
+    window.addEventListener("load", function () { navigator.serviceWorker.register("sw.js").then(check, function () { /* offline support unavailable: the app still works online */ }); });
+    document.addEventListener("visibilitychange", function () { if (document.visibilityState === "visible") check(); });
+    /* The new version is ready. On a menu, load it straight away. In the middle of a quiz or a card session, wait and say so. */
+    navigator.serviceWorker.addEventListener("controllerchange", function () {
+      if (!hadController) { hadController = true; return; }
+      if (document.body.classList.contains("focus")) A.toast("App updated. Close and reopen it to get the new version."); else location.reload();
+    });
   }
 })(window.CCNA);

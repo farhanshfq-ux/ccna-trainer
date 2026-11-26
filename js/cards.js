@@ -18,6 +18,10 @@
     var e = A.ST.cards.cards[card.id], box = e ? e.b : 0, nb = knew ? Math.min(5, Math.max(box, 1) + 1) : 1;
     A.ST.cards.cards[card.id] = { b: nb, d: A.today(INTERVAL[nb]), s: (e ? e.s : 0) + 1, c: (e ? e.c : 0) + (knew ? 1 : 0) }; A.touch("cards");
   };
+  A.catDomain = function (cat) {               /* the exam domain most of a topic's cards belong to */
+    var n = {}, best = 0; A.D.flashcards.forEach(function (k) { if (k.category === cat) { n[k.domain] = (n[k.domain] || 0) + 1; if (!best || n[k.domain] > n[best]) best = k.domain; } });
+    return best;
+  };
   A.cardMode = function () { return A.settings.cards === "classic" ? "classic" : "visual"; };
   A.playCards = function (set, label, backTo) { if (A.cardMode() === "classic") run(set, label, backTo); else A.runVisualCards(set, label, backTo); };
   A.weakCards = function () { return A.D.flashcards.filter(function (k) { var e = A.ST.cards.cards[k.id]; return e && e.b === 1; }); };
@@ -25,7 +29,7 @@
 
   A.cardsMenu = function () {
     var cards = A.D.flashcards, st = A.ST.cards.cards, counts = A.boxCounts(), due = A.dueCards().length, weak = A.weakCards(), visual = A.cardMode() === "visual",
-        cats = Array.from(new Set(cards.map(function (c) { return c.category; }))).sort();
+        cats = Array.from(new Set(cards.map(function (c) { return c.category; }))).sort(function (a, b) { return A.catDomain(a) - A.catDomain(b) || (a < b ? -1 : 1); });   /* grouped by exam domain, so the colours sit together */
     var labels = ["New (never seen)", "Box 1 (every session)", "Box 2 (every 2 days)", "Box 3 (every 4 days)", "Box 4 (every 8 days)", "Box 5 (every 16 days)"];
     function setMode(m) { A.settings.cards = m; A.LS.set("settings", A.settings); A.cardsMenu(); }
     frame({ title: "Flashcards", tab: "cards" }, [
@@ -39,9 +43,10 @@
       h("div", { class: "panel bars" }, labels.map(function (l, b) { return h("div", { class: "stack tight" }, [h("div", { class: "bar-head" }, [h("span", { text: l }), h("span", { text: String(counts[b]) })]),
         h("div", { class: "track" }, [h("div", { class: "fill" + (b >= 4 ? " ok" : ""), style: "width:" + pct(counts[b], cards.length) + "%" })])]); })),
       h("h2", { text: "Pick a topic" }),
-      h("p", { class: "small muted", text: "Each topic opens a picture board: every card in it on one page, then a button to test yourself." }),
+      h("p", { class: "small muted", text: "Each topic opens a picture board: every card in it on one page, then a button to test yourself. The colour shows which part of the exam it belongs to." }),
+      A.toneKey(),
       A.modeList(cats.map(function (c) { var set = cards.filter(function (k) { return k.category === c; }), known = set.filter(function (k) { return st[k.id] && st[k.id].b >= 3; }).length;
-        return { name: c, sub: set.length + " cards", badge: known ? known + "/" + set.length : null, done: known === set.length, go: function () { A.cardsTopic(c); } }; })),
+        return { name: c, sub: set.length + " cards", tone: A.catDomain(c), badge: known ? known + "/" + set.length : null, done: known === set.length, go: function () { A.cardsTopic(c); } }; })),
       h("p", { class: "small muted", text: "The badge counts cards in box 3 or higher. Cards marked \"background\" cover useful knowledge that is not an explicit v2.0 exam objective." })
     ]);
   };
@@ -58,7 +63,7 @@
       if (i >= set.length) return done();
       var card = set[i], e = A.ST.cards.cards[card.id], box = e ? e.b : 0, shown = false;
       var back = h("div", { class: "backtxt", text: card.back, hidden: true }), actions = h("div", { class: "stack" }), hint = h("div", { class: "swipe-hint", hidden: true }, [h("span", { text: "← swipe: missed" }), h("span", { text: "got it: swipe →" })]);
-      var el = h("div", { class: "card", id: "flashcard", role: "button", tabindex: "0", "aria-label": "Flashcard. Tap to show the answer." }, [h("div", { class: "front", text: card.front }), back]);
+      var el = h("div", { class: "card" + A.tone(card.domain), id: "flashcard", role: "button", tabindex: "0", "aria-label": "Flashcard. Tap to show the answer." }, [h("div", { class: "front", text: card.front }), back]);
       function grade(knew) {
         var nb = knew ? Math.min(5, Math.max(box, 1) + 1) : 1;
         A.ST.cards.cards[card.id] = { b: nb, d: A.today(INTERVAL[nb]), s: (e ? e.s : 0) + 1, c: (e ? e.c : 0) + (knew ? 1 : 0) }; A.touch("cards");
@@ -92,7 +97,7 @@
 
       frame({ title: label, back: done, backLabel: "Finish" }, [
         A.plate("Card " + (i + 1) + " of " + set.length, box ? "box " + box : "new card", set.length, function (k) { return k < i ? "done" : k === i ? "now" : ""; }),
-        h("span", { class: "eyebrow", text: card.category + (card.background ? " · background" : "") }),
+        h("span", { class: "eyebrow pill" + A.tone(card.domain), text: card.category + (card.background ? " · background" : "") }),
         el, hint,
         h("p", { class: "small muted", text: "Say the answer out loud before you look." }), actions]);
     }

@@ -72,8 +72,8 @@
         if (!notes.length) kids.push(h("div", { class: "notice", text: "No study notes are in the app yet." }));
         Object.keys(A.DOMAINS).forEach(function (dom) {
           var set = notes.filter(function (d) { return String(d.domain) === dom; }); if (!set.length) return;
-          kids.push(h("h2", { text: dom + ". " + A.DOMAINS[dom][0] }));
-          kids.push(A.modeList(set.map(function (d) { return { name: d.title, sub: A.DOMAINS[dom][1] + "% domain", go: function () { A.readDoc(d); } }; })));
+          kids.push(h("h2", { class: A.tone(dom).trim() }, [h("span", { class: "dot", "aria-hidden": "true" }), dom + ". " + A.DOMAINS[dom][0]]));
+          kids.push(A.modeList(set.map(function (d) { return { name: d.title, sub: A.DOMAINS[dom][1] + "% domain", tone: dom, go: function () { A.readDoc(d); } }; })));
         });
         [["labs", "Labs"], ["reference", "Reference"]].forEach(function (g) {
           var set = docs.filter(function (d) { return d.group === g[0]; }); if (!set.length) return;

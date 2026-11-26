@@ -87,15 +87,16 @@
     var crs = A.COURSES[0], cd = A.courseDone(crs.id), cn = crs.chapters.length;
     if (cd < cn) kids.push(h("button", { class: "hero", type: "button", id: "course-hero", onclick: function () { A.runCourse(crs.id); } }, [h("span", { class: "eyebrow", text: cd ? "Carry on · chapter " + (cd + 1) + " of " + cn : "Start here · no knowledge needed" }), h("span", { class: "hero-title", text: crs.title }),
       h("span", { class: "hero-sub", text: crs.sub + ". " + cn + " short chapters, about 5 minutes each." }), h("span", { class: "hero-go", text: (cd ? "Carry on" : "Start") + " \u203a" })]));
-    if (nxt) kids.push(h("button", { class: cd < cn ? "hero alt" : "hero", type: "button", onclick: function () { A.runLesson(nxt); } }, [h("span", { class: "eyebrow", text: "Up next · objective " + nxt.objective }), h("span", { class: "hero-title", text: nxt.title.replace(/^[\d.]+\s*/, "") }),
+    if (nxt) kids.push(h("button", { class: (cd < cn ? "hero alt" : "hero") + A.tone(nxt.domain), type: "button", onclick: function () { A.runLesson(nxt); } }, [h("span", { class: "eyebrow", text: "Up next · objective " + nxt.objective }), h("span", { class: "hero-title", text: nxt.title.replace(/^[\d.]+\s*/, "") }),
       h("span", { class: "hero-sub", text: "About 10 minutes. " + (A.visualsFor(nxt.objective).length ? "Includes a visual guide." : "Ends with questions you answer out loud.") }), h("span", { class: "hero-go", text: "Start lesson ›" })]));
     if (cd >= cn) kids.push(A.modeList([{ name: crs.title, sub: "The from-scratch course. Tap to go through it again", badge: "done", done: true, go: function () { A.runCourse(crs.id, 0); } }]));
     kids.push(h("h2", { text: "Visual guides" }));
-    kids.push(h("div", { class: "tiles" }, A.VISUALS.map(function (v) { return h("button", { class: "tile", type: "button", onclick: function () { v.open(A.learnMenu); } }, [h("span", { class: "tile-obj mono", text: v.obj.join(" · ") }), h("span", { class: "tile-title", text: v.title }), h("span", { class: "tile-sub", text: v.sub })]); })));
+    kids.push(h("p", { class: "small muted", text: "Colours follow the five parts of the exam." })); kids.push(A.toneKey());
+    kids.push(h("div", { class: "tiles" }, A.VISUALS.map(function (v) { return h("button", { class: "tile" + A.tone(v.obj[0].charAt(0)), type: "button", onclick: function () { v.open(A.learnMenu); } }, [h("span", { class: "tile-obj mono", text: v.obj.join(" · ") }), h("span", { class: "tile-title", text: v.title }), h("span", { class: "tile-sub", text: v.sub })]); })));
     Object.keys(A.DOMAINS).forEach(function (dom) {
       var set = lessons.filter(function (d) { return String(d.domain) === dom; }), n = set.filter(function (d) { return A.lessonDone(d.objective); }).length; if (!set.length) return;
-      kids.push(h("div", { class: "stack tight" }, [h("div", { class: "bar-head" }, [h("h2", { text: dom + ". " + A.DOMAINS[dom][0] }), h("span", { text: n + "/" + set.length })]), h("div", { class: "track" }, [h("div", { class: "fill ok", style: "width:" + A.pct(n, set.length) + "%" })])]));
-      kids.push(A.modeList(set.map(function (d) { var v = A.visualsFor(d.objective).length; return { name: d.title, sub: v ? "Lesson with " + (v > 1 ? v + " visual guides" : "a visual guide") : "Lesson", badge: A.lessonDone(d.objective) ? "done" : null, done: true, go: function () { A.runLesson(d); } }; })));
+      kids.push(h("div", { class: "stack tight" + A.tone(dom) }, [h("div", { class: "bar-head" }, [h("h2", {}, [h("span", { class: "dot", "aria-hidden": "true" }), dom + ". " + A.DOMAINS[dom][0]]), h("span", { text: n + "/" + set.length })]), h("div", { class: "track" }, [h("div", { class: "fill", style: "width:" + A.pct(n, set.length) + "%" })])]));
+      kids.push(A.modeList(set.map(function (d) { var v = A.visualsFor(d.objective).length; return { name: d.title, sub: v ? "Lesson with " + (v > 1 ? v + " visual guides" : "a visual guide") : "Lesson", tone: dom, badge: A.lessonDone(d.objective) ? "done" : null, done: true, go: function () { A.runLesson(d); } }; })));
     });
     frame({ title: "Learn", tab: "learn" }, kids);
   };

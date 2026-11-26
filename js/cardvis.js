@@ -163,8 +163,8 @@
       A.setKids(vis, [A.cardVisual(card, false)]);
       frame({ title: label, back: done, backLabel: "Finish" }, [
         A.plate("Card " + (i + 1) + " of " + queue.length, it.again ? "second look" : box ? "box " + box : "new card", queue.length, function (k) { return k < i ? "done" : k === i ? "now" : ""; }),
-        h("span", { class: "eyebrow", text: card.category + (card.background ? " · background" : "") }),
-        h("div", { class: "cv-card", id: "flashcard" }, [h("div", { class: "front", text: card.q || card.front }), vis]),
+        h("span", { class: "eyebrow pill" + A.tone(card.domain), text: card.category + (card.background ? " · background" : "") }),
+        h("div", { class: "cv-card" + A.tone(card.domain), id: "flashcard" }, [h("div", { class: "front", text: card.q || card.front }), vis]),
         card.m === "order" ? null : card.a ? h("p", { class: "small muted", text: "Tap the right answer." }) : null,
         task, after]);
     }
@@ -190,12 +190,12 @@
   /* ---------- a topic: test button, then the picture board ---------- */
   A.cardsTopic = function (cat) {
     var set = A.D.flashcards.filter(function (c) { return c.category === cat; }), st = A.ST.cards.cards,
-        known = set.filter(function (c) { return st[c.id] && st[c.id].b >= 3; }).length, back = function () { A.cardsTopic(cat); };
+        known = set.filter(function (c) { return st[c.id] && st[c.id].b >= 3; }).length, back = function () { A.cardsTopic(cat); }, dom = A.catDomain(cat);
     frame({ title: "Flashcards", tab: "cards", back: A.cardsMenu, backLabel: "All topics" }, [
-      h("div", { class: "stack tight" }, [h("h1", { text: cat }), h("p", { class: "muted", text: set.length + " cards. " + known + " in box 3 or higher." })]),
+      h("div", { class: "stack tight" }, [h("span", { class: "eyebrow pill" + A.tone(dom), text: A.DOMAINS[dom] ? "Domain " + dom + " · " + A.DOMAINS[dom][0] : "Flashcards" }), h("h1", { text: cat }), h("p", { class: "muted", text: set.length + " cards. " + known + " in box 3 or higher." })]),
       h("button", { class: "btn", type: "button", id: "topic-test", text: "Test me on these " + set.length, onclick: function () { A.playCards(A.shuffle(set), cat, back); } }),
       h("h2", { text: "Picture board" }),
       h("p", { class: "small muted", text: "Everything in this topic on one page. Read it through, then test yourself." })
-    ].concat(set.map(function (c) { return h("div", { class: "cv-card cv-entry" }, [h("h3", { text: c.front + (c.background ? " (background)" : "") }), A.cardVisual(c, true), backText(c), hook(c)]); })));
+    ].concat(set.map(function (c) { return h("div", { class: "cv-card cv-entry" + A.tone(c.domain) }, [h("h3", { text: c.front + (c.background ? " (background)" : "") }), A.cardVisual(c, true), backText(c), hook(c)]); })));
   };
 })(window.CCNA);

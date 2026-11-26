@@ -71,7 +71,7 @@
       h("div", { class: "stack tight" }, [h("span", { class: "eyebrow", text: "Readiness score" }), h("div", { class: "score", text: Math.round(rd.score) + " / 100" }), h("div", { class: "track" }, [h("div", { class: "fill", style: "width:" + rd.score + "%" })])]),
       h("div", { class: "panel" }, [h("dl", { class: "facts" }, [].concat.apply([], rd.parts.map(function (p) { return [h("dt", { text: p[0] }), h("dd", { text: p[1].toFixed(1) + " / " + p[2] })]; })))]),
       h("h2", { text: "Scores per domain" }),
-      h("div", { class: "panel bars" }, rows.map(function (x) { return h("div", { class: "stack tight" }, [h("div", { class: "bar-head" }, [h("span", { text: x.d + ". " + DOMAINS[x.d][0] }), h("span", { text: x.score.toFixed(1) + " / 10" })]),
+      h("div", { class: "panel bars" }, rows.map(function (x) { return h("div", { class: "stack tight" + A.tone(x.d) }, [h("div", { class: "bar-head" }, [h("span", {}, [h("span", { class: "dot", "aria-hidden": "true" }), x.d + ". " + DOMAINS[x.d][0]]), h("span", { text: x.score.toFixed(1) + " / 10" })]),
         h("div", { class: "track" }, [h("div", { class: "fill", style: "width:" + x.score * 10 + "%" })]), h("span", { class: "small muted mono", text: "seen " + x.seen + "/" + x.total + " · accuracy " + x.acc + " · weight " + DOMAINS[x.d][1] + "%" })]); })),
       h("p", { class: "small muted", text: "Score out of 10 = share of the domain's questions you answered correctly the last time you saw them. Unseen questions count as zero, so it rewards coverage as well as accuracy." }),
       h("h2", { text: "Weakest topics" }),

@@ -307,3 +307,23 @@ ol.plain { margin: 0; padding-left: 1.3rem; display: flex; flex-direction: colum
 .cv-chip { border: 1.5px solid var(--accent); background: var(--accent-soft); color: var(--ink); border-radius: 999px; padding: 10px 14px; min-height: 44px; font-weight: 600; }
 .cv-chip:disabled { opacity: 0.25; }
 .opt:disabled { cursor: default; color: var(--ink); }
+
+/* ---------- colour: one per exam domain, the same everywhere that domain appears ---------- */
+:root { --d1: #1b6fd1; --d1s: #e2edfb; --d2: #0b877b; --d2s: #daf2ef; --d3: #b95c06; --d3s: #fbecdb; --d4: #c02c7c; --d4s: #fbe3ef; --d5: #7446cf; --d5s: #ebe4fa; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --d1: #6fb0f7; --d1s: #15283e; --d2: #42d1c0; --d2s: #0f2f2c; --d3: #f6a352; --d3s: #33230f; --d4: #f47fba; --d4s: #371a2a; --d5: #b9a0f8; --d5s: #271f3f } }
+:root[data-theme="dark"] { --d1: #6fb0f7; --d1s: #15283e; --d2: #42d1c0; --d2s: #0f2f2c; --d3: #f6a352; --d3s: #33230f; --d4: #f47fba; --d4s: #371a2a; --d5: #b9a0f8; --d5s: #271f3f; }
+.d1 { --tone: var(--d1); --tone-soft: var(--d1s); } .d2 { --tone: var(--d2); --tone-soft: var(--d2s); } .d3 { --tone: var(--d3); --tone-soft: var(--d3s); }
+.d4 { --tone: var(--d4); --tone-soft: var(--d4s); } .d5 { --tone: var(--d5); --tone-soft: var(--d5s); }
+.dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--tone, var(--muted)); margin-right: 8px; flex: 0 0 10px; }
+.mode.tone { box-shadow: inset 5px 0 0 var(--tone); padding-left: 20px; }
+.mode.tone .badge:not(.done) { background: var(--tone-soft); color: var(--tone); }
+.tone > .track .fill, .tone .bar-head + .track .fill { background: var(--tone); }
+.eyebrow.pill { align-self: flex-start; border-radius: 999px; padding: 4px 10px; background: var(--sunk); }
+.eyebrow.pill.tone { background: var(--tone-soft); color: var(--tone); }
+.cv-card.tone, .card.tone { border-top: 5px solid var(--tone); }
+.tile.tone { border-top-color: var(--tone); } .tile.tone .tile-obj { color: var(--tone); font-weight: 700; }
+.hero.tone:not(.alt) { background: var(--tone); } .hero.alt.tone { border-color: var(--tone); } .hero.alt.tone .eyebrow, .hero.alt.tone .hero-go { color: var(--tone); opacity: 1; }
+.tone-key { display: flex; flex-wrap: wrap; gap: 6px; }
+.tone-chip { display: inline-flex; align-items: center; font-size: 0.75rem; font-weight: 600; border-radius: 999px; padding: 4px 10px 4px 8px; background: var(--tone-soft); color: var(--tone); }
+.tone-chip .dot { margin-right: 6px; width: 8px; height: 8px; flex-basis: 8px; }

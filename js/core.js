@@ -63,15 +63,21 @@
     return h("div", { class: "stack tight" }, [title ? h("span", { class: "exhibit-title", text: title }) : null,
       h("div", { class: "exhibit" + (tall ? " tall" : ""), tabindex: "0" }, [h("pre", { text: text })]), h("span", { class: "small muted", text: "Swipe sideways to read long lines." })]);
   };
+  /* Colour: each of the five exam domains has its own colour (CSS classes d1 to d5), used everywhere that domain appears. */
+  A.tone = function (d) { return A.DOMAINS[d] ? " tone d" + d : ""; };
+  A.toneKey = function () {
+    return h("div", { class: "tone-key", role: "group", "aria-label": "Colour key: the five exam domains" }, Object.keys(A.DOMAINS).map(function (d) {
+      return h("span", { class: "tone-chip" + A.tone(d) }, [h("span", { class: "dot", "aria-hidden": "true" }), d + ". " + A.DOMAINS[d][0]]); }));
+  };
   A.modeList = function (items) {
     return h("div", { class: "modes" }, items.filter(Boolean).map(function (it) {
-      return h("button", { class: "mode", type: "button", onclick: it.go }, [h("span", { class: "txt" }, [h("span", { class: "name", text: it.name }), it.sub ? h("span", { class: "sub", text: it.sub }) : null]),
+      return h("button", { class: "mode" + (it.tone ? A.tone(it.tone) : ""), type: "button", onclick: it.go }, [h("span", { class: "txt" }, [h("span", { class: "name", text: it.name }), it.sub ? h("span", { class: "sub", text: it.sub }) : null]),
         it.badge ? h("span", { class: "badge" + (it.done ? " done" : ""), text: it.badge }) : null, h("span", { class: "chev", text: "›" })]);
     }));
   };
   A.domainBars = function (byD) {
     return h("div", { class: "panel bars" }, Object.keys(A.DOMAINS).map(function (d) { var b = byD[d] || [0, 0];
-      return h("div", { class: "stack tight" }, [h("div", { class: "bar-head" }, [h("span", { text: d + ". " + A.DOMAINS[d][0] }), h("span", { text: b[1] ? b[0] + "/" + b[1] : "-" })]),
+      return h("div", { class: "stack tight" + A.tone(d) }, [h("div", { class: "bar-head" }, [h("span", {}, [h("span", { class: "dot", "aria-hidden": "true" }), d + ". " + A.DOMAINS[d][0]]), h("span", { text: b[1] ? b[0] + "/" + b[1] : "-" })]),
         h("div", { class: "track" }, [h("div", { class: "fill", style: "width:" + A.pct(b[0], b[1]) + "%" })])]); }));
   };
   A.toast = function (text) {
