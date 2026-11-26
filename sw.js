@@ -1,11 +1,12 @@
 /* sw.js: makes the app work with no signal.
    On first visit it saves every file the app needs. After that, files are served from the phone.
    VERSION and ASSETS are rewritten by tools/build_app.py whenever the content changes. */
-var VERSION = "ccna-trainer-92159df13b52";
+var VERSION = "ccna-trainer-592713368b76";
 var ASSETS = ["./", "index.html", "manifest.webmanifest", "css/app.css", "data/coach.json", "data/diagnostic.json", "data/flashcards.json", "data/notes.json", "data/plan.json", "data/questions.json", "data/scenarios.json", "icons/icon-180.png", "icons/icon-192.png", "icons/icon-512.png", "icons/icon-maskable-512.png", "js/cards.js", "js/cardvis.js", "js/core.js", "js/course.js", "js/engine.js", "js/learn.js", "js/main.js", "js/notes.js", "js/progress.js", "js/subnet.js", "js/trouble.js", "js/visuals.js"];
 
 self.addEventListener("install", function (event) {
-  event.waitUntil(caches.open(VERSION).then(function (cache) { return cache.addAll(ASSETS); }).then(function () { return self.skipWaiting(); }));
+  /* cache: "reload" skips the browser's own HTTP cache, so a new version never saves stale copies of the old files */
+  event.waitUntil(caches.open(VERSION).then(function (cache) { return cache.addAll(ASSETS.map(function (a) { return new Request(a, { cache: "reload" }); })); }).then(function () { return self.skipWaiting(); }));
 });
 self.addEventListener("activate", function (event) {
   event.waitUntil(caches.keys().then(function (keys) {
